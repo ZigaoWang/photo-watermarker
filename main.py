@@ -3,6 +3,22 @@ import argparse
 from PIL import Image
 
 
+def print_logo():
+    logo = r"""
+   ___  __        __         _      __     __                         __          
+  / _ \/ /  ___  / /____    | | /| / /__ _/ /____ ______ _  ___ _____/ /_____ ____
+ / ___/ _ \/ _ \/ __/ _ \   | |/ |/ / _ `/ __/ -_) __/  ' \/ _ `/ __/  '_/ -_) __/
+/_/  /_//_/\___/\__/\___/   |__/|__/\_,_/\__/\__/_/ /_/_/_/\_,_/_/ /_/\_\\__/_/   
+    """
+    print("--------------------------------------------------")
+    print(logo)
+    print("Photo Watermarker")
+    print("Made with 💜 by Zigao Wang.")
+    print("This project is licensed under MIT License.")
+    print("GitHub Repo: https://github.com/ZigaoWang/photo-watermarker/")
+    print("--------------------------------------------------")
+
+
 def add_image_watermark(image_path, watermark_path, position, output_path):
     image = Image.open(image_path).convert("RGBA")
     watermark = Image.open(watermark_path).convert("RGBA")
@@ -38,6 +54,8 @@ def prompt_user_for_inputs():
 
 
 def main():
+    print_logo()
+
     parser = argparse.ArgumentParser(description="Add an image watermark to an image")
     parser.add_argument("image", nargs='?', help="Path to the input image")
     parser.add_argument("--watermark", help="Path to the watermark image")
