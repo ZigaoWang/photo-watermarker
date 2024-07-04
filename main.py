@@ -58,7 +58,7 @@ def open_watermark():
 
 def preview_image(image):
     preview = image.copy()
-    preview.thumbnail((400, 400))
+    preview.thumbnail((800, 800))
     photo = ImageTk.PhotoImage(preview)
     img_label.config(image=photo)
     img_label.image = photo
