@@ -1,7 +1,7 @@
 import os
-import argparse
-from PIL import Image
-
+import tkinter as tk
+from tkinter import filedialog, messagebox
+from PIL import Image, ImageTk
 
 def print_logo():
     logo = r"""
@@ -19,9 +19,9 @@ def print_logo():
     print("--------------------------------------------------")
 
 
-def add_image_watermark(image_path, watermark_path, position, output_path):
-    image = Image.open(image_path).convert("RGBA")
-    watermark = Image.open(watermark_path).convert("RGBA")
+def add_image_watermark(image, watermark, position):
+    image = image.convert("RGBA")
+    watermark = watermark.convert("RGBA")
 
     if position == 'top-left':
         pos = (10, 10)
@@ -38,47 +38,77 @@ def add_image_watermark(image_path, watermark_path, position, output_path):
     transparent.paste(image, (0, 0))
     transparent.paste(watermark, pos, mask=watermark)
 
-    watermarked_image = Image.alpha_composite(image, transparent)
-    watermarked_image = watermarked_image.convert("RGB")  # Remove alpha for saving in jpg format
-    watermarked_image.save(output_path)
+    return Image.alpha_composite(image, transparent).convert("RGB")
 
 
-def prompt_user_for_inputs():
-    image_path = input("Enter the path to the input image: ")
-    watermark_path = input("Enter the path to the watermark image: ")
-    position = input(
-        "Enter the position for the watermark (top-left, top-right, bottom-left, bottom-right, center): ").strip().lower() or 'bottom-right'
-    output_path = input("Enter the path to save the output image (default is output.jpg): ") or 'output.jpg'
-
-    return image_path, watermark_path, position, output_path
+def open_image():
+    file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.jpeg *.png")])
+    if file_path:
+        global img
+        img = Image.open(file_path)
+        preview_image(img)
 
 
-def main():
-    print_logo()
-
-    parser = argparse.ArgumentParser(description="Add an image watermark to an image")
-    parser.add_argument("image", nargs='?', help="Path to the input image")
-    parser.add_argument("--watermark", help="Path to the watermark image")
-    parser.add_argument("--position", choices=['top-left', 'top-right', 'bottom-left', 'bottom-right', 'center'],
-                        default='bottom-right', help="Position of the watermark")
-    parser.add_argument("--output", help="Path to the output image", default="output.jpg")
-
-    args = parser.parse_args()
-
-    if not args.image:
-        image_path, watermark_path, position, output_path = prompt_user_for_inputs()
-    else:
-        image_path = args.image
-        watermark_path = args.watermark
-        position = args.position
-        output_path = args.output
-
-    if watermark_path:
-        add_image_watermark(image_path, watermark_path, position, output_path)
-    else:
-        print("Error: You must specify --watermark")
-        parser.print_help()
+def open_watermark():
+    file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.jpeg *.png")])
+    if file_path:
+        global watermark
+        watermark = Image.open(file_path)
+        preview_watermark()
 
 
-if __name__ == "__main__":
-    main()
+def preview_image(image):
+    preview = image.copy()
+    preview.thumbnail((400, 400))
+    photo = ImageTk.PhotoImage(preview)
+    img_label.config(image=photo)
+    img_label.image = photo
+
+
+def preview_watermark():
+    if img and watermark:
+        watermarked = add_image_watermark(img, watermark, position.get())
+        preview_image(watermarked)
+
+
+def save_image():
+    if img and watermark:
+        watermarked = add_image_watermark(img, watermark, position.get())
+        save_path = filedialog.asksaveasfilename(defaultextension=".jpg", filetypes=[("JPEG files", "*.jpg")])
+        if save_path:
+            watermarked.save(save_path)
+            messagebox.showinfo("Success", "Image saved successfully!")
+
+
+def update_preview(*args):
+    preview_watermark()
+
+
+img = None
+watermark = None
+
+root = tk.Tk()
+root.title("Photo Watermarker")
+
+frame = tk.Frame(root)
+frame.pack(padx=10, pady=10)
+
+btn_open_image = tk.Button(frame, text="Open Image", command=open_image)
+btn_open_image.grid(row=0, column=0, padx=5, pady=5)
+
+btn_open_watermark = tk.Button(frame, text="Open Watermark", command=open_watermark)
+btn_open_watermark.grid(row=0, column=1, padx=5, pady=5)
+
+position = tk.StringVar(value="bottom-right")
+positions = ["top-left", "top-right", "bottom-left", "bottom-right", "center"]
+for i, pos in enumerate(positions):
+    tk.Radiobutton(frame, text=pos.replace("-", " ").title(), variable=position, value=pos, command=update_preview).grid(row=1, column=i, padx=5, pady=5)
+
+btn_save = tk.Button(frame, text="Save Image", command=save_image)
+btn_save.grid(row=2, column=0, columnspan=5, pady=10)
+
+img_label = tk.Label(root)
+img_label.pack(padx=10, pady=10)
+
+print_logo()
+root.mainloop()
